@@ -650,17 +650,17 @@
 
     .card-actions-row {
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: 1fr 1fr auto;
       gap: 8px;
     }
 
     /* Copy Button & Slip Button */
     .apple-copy-btn {
-      background: #28a745;
-      border: 1px solid transparent;
-      color: #ffffff;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--ink);
       font-family: inherit;
-      font-size: 14.5px;
+      font-size: 13.5px;
       font-weight: 600;
       padding: 11px 16px;
       border-radius: 10px;
@@ -673,7 +673,8 @@
     }
 
     .apple-copy-btn:hover {
-      background: #218838;
+      background: #f5f5f7;
+      border-color: var(--border-strong);
     }
 
     .apple-slip-preview-btn {
@@ -1182,6 +1183,13 @@
                 </svg>
                 <span>บันทึกภาพสลีป</span>
               </button>
+              <button type="button" class="apple-copy-btn" id="copyBuyTextBtn" style="background: #f5f5f7; color: var(--ink); border: 1px solid var(--border);">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <span>คัดลอกข้อความ</span>
+              </button>
               <button type="button" class="apple-slip-preview-btn" id="previewBuySlipBtn">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -1252,6 +1260,13 @@
                   <line x1="12" y1="15" x2="12" y2="3"></line>
                 </svg>
                 <span>บันทึกภาพสลีป</span>
+              </button>
+              <button type="button" class="apple-copy-btn" id="copySellTextBtn" style="background: #f5f5f7; color: var(--ink); border: 1px solid var(--border);">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <span>คัดลอกข้อความ</span>
               </button>
               <button type="button" class="apple-slip-preview-btn" id="previewSellSlipBtn">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1435,6 +1450,7 @@
         });
       }
 
+      // Format clean money to two decimal places
       function fmtMoney(num) {
         if (!Number.isFinite(num)) return "0.00";
         return num.toLocaleString("en-US", {
@@ -1505,7 +1521,6 @@
         return computedTiers[2];
       }
 
-      // Fix Budgets correctly
       function pickBuyTierForThbBudget(thbBudget, computedTiers) {
         const usdAtTier0 = thbBudget / computedTiers[0].buyRate;
         if (usdAtTier0 <= 30) return computedTiers[0];
@@ -1975,6 +1990,18 @@
       document.getElementById("closeSlipFooterBtn").addEventListener("click", closeSlipModal);
       document.getElementById("slipModalBackdrop").addEventListener("click", function (e) {
         if (e.target === this) closeSlipModal();
+      });
+
+      document.getElementById("copyBuyTextBtn").addEventListener("click", function () {
+        calculateBuyCard();
+        const slipText = generateReceiptSlipText(lastBuyCalc);
+        copyTextToClipboard(slipText, "คัดลอกสลีป ซื้อUSD เรียบร้อยแล้ว!");
+      });
+
+      document.getElementById("copySellTextBtn").addEventListener("click", function () {
+        calculateSellCard();
+        const slipText = generateReceiptSlipText(lastSellCalc);
+        copyTextToClipboard(slipText, "คัดลอกสลีป ขายUSD เรียบร้อยแล้ว!");
       });
 
       document.getElementById("copySlipTextBtn").addEventListener("click", function () {
