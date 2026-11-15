@@ -1132,13 +1132,12 @@
         <img src="logo_coin_transparent.png">
           <div style="display: flex; flex-direction: column;">
           <span style="line-height: 1.1;">Fuji Coin Store</span>
-          <span style="font-size: 10px; color: var(--muted); font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase;">Real-Time Exchange</span>
         </div>
       </div>
       <div class="nav-badge-group">
         <div class="binance-status-pill" id="navBinanceStatus">
           <span class="live-dot" id="binanceLiveDot"></span>
-          <span id="navBinanceText">Binance TH Reference</span>
+          <span id="navBinanceText">Binance</span>
         </div>
       </div>
     </div>
@@ -1158,18 +1157,18 @@
     <section class="control-card" aria-label="ตั้งค่าอัตราแลกเปลี่ยนและค่าธรรมเนียม">
       <div class="control-row">
         <div class="rate-setting-group">
-          <label class="setting-label" for="baseRateInput">อัตราแลกเปลี่ยนกลาง (USD/THB):</label>
+          <label class="setting-label" for="baseRateInput">อัตราการแลกเปลี่ยน (USD/THB):</label>
           <div class="apple-input-wrapper">
             <input type="number" id="baseRateInput" value="0.00" step="0.01" min="0.00" inputmode="decimal">
           </div>
-          <button type="button" class="apple-btn apple-btn-primary" id="applyRateBtn">คำนวณและบันทึกเรท</button>
+          <button type="button" class="apple-btn apple-btn-primary" id="applyRateBtn">คำนวณ</button>
         </div>
       </div>
 
       <!-- Static Status Banner referencing Binance TH -->
       <div class="binance-info-bar">
         <div class="binance-meta" style="color: var(--muted); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">
-          <span>💡 <strong>คำแนะนำ:</strong> โปรดป้อนอัตราแลกเปลี่ยนกลาง (USD/THB) ด้วยตนเอง โดยตรวจสอบและอ้างอิงราคาปัจจุบันจาก <strong>Binance TH (USDT/THB)</strong></span>
+          <span>💡 <strong>คำแนะนำ:</strong> โปรดป้อนอัตราการแลกเปลี่ยน (USD/THB) ด้วยตนเอง โดยตรวจสอบและอ้างอิงราคาปัจจุบันจาก <strong>Binance</strong></span>
         </div>
       </div>
 
@@ -1177,27 +1176,26 @@
       <div class="fee-tiers-grid">
         <div class="fee-header-row">
           <span class="setting-label" style="font-size: 14px;">กำหนดอัตราค่าธรรมเนียมต่อ 1 USD สำหรับแต่ละช่วงยอดธุรกรรม:</span>
-          <button type="button" class="clear-input-btn" id="resetDefaultFeesBtn">คืนค่าเริ่มต้น (10% / 6% / 3%)</button>
         </div>
         <div class="fee-inputs-row">
           <div class="fee-input-col">
             <label for="feeTier0Input">
               <span>ช่วง 1–30 USD</span>
-              <span class="fee-pct-badge" id="feeTier0Pct">10.0%</span>
+              <span class="fee-pct-badge" id="feeTier0Pct"></span>
             </label>
             <input type="number" id="feeTier0Input" value="0.10" step="0.005" min="0" max="1" inputmode="decimal">
           </div>
           <div class="fee-input-col">
             <label for="feeTier1Input">
               <span>ช่วง 31–100 USD</span>
-              <span class="fee-pct-badge" id="feeTier1Pct">6.0%</span>
+              <span class="fee-pct-badge" id="feeTier1Pct"></span>
             </label>
             <input type="number" id="feeTier1Input" value="0.06" step="0.005" min="0" max="1" inputmode="decimal">
           </div>
           <div class="fee-input-col">
             <label for="feeTier2Input">
               <span>ช่วงมากกว่า 100 USD</span>
-              <span class="fee-pct-badge" id="feeTier2Pct">3.0%</span>
+              <span class="fee-pct-badge" id="feeTier2Pct"></span>
             </label>
             <input type="number" id="feeTier2Input" value="0.03" step="0.005" min="0" max="1" inputmode="decimal">
           </div>
@@ -1217,7 +1215,7 @@
       <div class="apple-card buy-card">
         <div class="apple-card-header">
           <h2 class="apple-card-title">ซื้อUSD</h2>
-          <span class="apple-card-tag">ลูกค้าซื้อดอลลาร์</span>
+          <span class="apple-card-tag">BUY</span>
         </div>
 
         <div class="apple-card-body">
@@ -1296,7 +1294,7 @@
       <div class="apple-card sell-card">
         <div class="apple-card-header">
           <h2 class="apple-card-title">ขายUSD</h2>
-          <span class="apple-card-tag">ลูกค้าขายดอลลาร์</span>
+          <span class="apple-card-tag">SELL</span>
         </div>
 
         <div class="apple-card-body">
@@ -2015,7 +2013,7 @@
         el.feeTier1Input.value = "0.06";
         el.feeTier2Input.value = "0.03";
         refreshAll();
-        showToast("คืนค่าธรรมเนียมเริ่มต้น (10% / 6% / 3%) แล้ว");
+        showToast("คืนค่าธรรมเนียมเริ่มต้นแล้ว");
       });
 
       el.baseRateInput.addEventListener("input", refreshAll);
