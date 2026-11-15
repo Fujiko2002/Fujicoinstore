@@ -1170,7 +1170,7 @@
     <section class="control-card" aria-label="ตั้งค่าอัตราแลกเปลี่ยนและค่าธรรมเนียม">
       <div class="control-row">
         <div class="rate-setting-group">
-          <label class="setting-label" for="baseRateInput">อัตราแลกเปลี่ยนกลาง (USD/THB):</label>
+          <label class="setting-label" for="baseRateInput">อัตราการแลกเปลี่ยน (USD/THB):</label>
           <div class="apple-input-wrapper">
             <input type="number" id="baseRateInput" value="33.8500" step="0.0001" min="0.0001" inputmode="decimal">
           </div>
@@ -1183,7 +1183,7 @@
             </svg>
             <span>ดึงเรทตลาดทันที</span>
           </button>
-          <button type="button" class="apple-btn apple-btn-primary" id="applyRateBtn">คำนวณและบันทึกเรท</button>
+          
         </div>
       </div>
 
@@ -1211,21 +1211,21 @@
           <div class="fee-input-col">
             <label for="feeTier0Input">
               <span>ช่วง 1–30 USD</span>
-              <span class="fee-pct-badge" id="feeTier0Pct">10.0%</span>
+              <span class="fee-pct-badge" id="feeTier0Pct"></span>
             </label>
             <input type="number" id="feeTier0Input" value="0.10" step="0.005" min="0" max="1" inputmode="decimal">
           </div>
           <div class="fee-input-col">
             <label for="feeTier1Input">
               <span>ช่วง 31–100 USD</span>
-              <span class="fee-pct-badge" id="feeTier1Pct">6.0%</span>
+              <span class="fee-pct-badge" id="feeTier1Pct"></span>
             </label>
             <input type="number" id="feeTier1Input" value="0.06" step="0.005" min="0" max="1" inputmode="decimal">
           </div>
           <div class="fee-input-col">
             <label for="feeTier2Input">
               <span>ช่วงมากกว่า 100 USD</span>
-              <span class="fee-pct-badge" id="feeTier2Pct">3.0%</span>
+              <span class="fee-pct-badge" id="feeTier2Pct"></span>
             </label>
             <input type="number" id="feeTier2Input" value="0.03" step="0.005" min="0" max="1" inputmode="decimal">
           </div>
@@ -1245,7 +1245,7 @@
       <div class="apple-card buy-card">
         <div class="apple-card-header">
           <h2 class="apple-card-title">ซื้อUSD</h2>
-          <span class="apple-card-tag">ลูกค้าซื้อดอลลาร์</span>
+          <span class="apple-card-tag">BUY USD</span>
         </div>
 
         <div class="apple-card-body">
@@ -1324,7 +1324,7 @@
       <div class="apple-card sell-card">
         <div class="apple-card-header">
           <h2 class="apple-card-title">ขายUSD</h2>
-          <span class="apple-card-tag">ลูกค้าขายดอลลาร์</span>
+          <span class="apple-card-tag">SELL USD</span>
         </div>
 
         <div class="apple-card-body">
