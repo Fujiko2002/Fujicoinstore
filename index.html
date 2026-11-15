@@ -1016,12 +1016,18 @@
     }
 
     /* Offscreen render state so html2canvas can capture even when modal isn't visually open */
-    .slip-modal-backdrop.capturing-offscreen {
-      opacity: 1;
-      visibility: visible;
+        .slip-modal-backdrop.capturing-offscreen {
+      opacity: 1 !important;
+      visibility: visible !important;
+      transition: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
       pointer-events: none;
       left: -9999px;
+      right: auto;
+      bottom: auto;
       top: 0;
+      width: 460px;
     }
 
     .slip-receipt-box {
@@ -1036,6 +1042,12 @@
       flex-direction: column;
       transform: scale(0.96);
       transition: transform 0.22s ease;
+    }
+
+    .slip-modal-backdrop.open .slip-receipt-box,
+    .slip-modal-backdrop.capturing-offscreen .slip-receipt-box {
+      transform: none;
+      transition: none;
     }
 
     .slip-modal-backdrop.open .slip-receipt-box {
@@ -1100,19 +1112,33 @@
       letter-spacing: 0.05em;
     }
 
-    .slip-status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
+      .slip-status-badge {
+      display: inline-block;
       background: #f0fdf4;
       color: #166534;
       font-size: 11.5px;
       font-weight: 700;
-      padding: 4px 12px;
+      line-height: 1.45;
+      padding: 4px 13px;
       border-radius: 99px;
       margin-top: 8px;
       border: 1px solid #bbf7d0;
+      white-space: nowrap;
     }
+
+    .slip-status-badge svg {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      vertical-align: -2px;
+      margin-right: 4px;
+    }
+
+    .slip-status-badge span {
+      display: inline;
+      vertical-align: baseline;
+    }
+
 
     .slip-status-badge.sell-status {
       background: #fff7ed;
