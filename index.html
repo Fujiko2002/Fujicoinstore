@@ -656,12 +656,14 @@
 
     /* Copy Button & Slip Button */
     .apple-copy-btn {
-      font-family: inherit;
-      font-size: 13.5px;
-      font-weight: 600;
-      padding: 10px 16px;
-      border-radius: 8px;
+      background: #28a745;
       border: 1px solid transparent;
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 14.5px;
+      font-weight: 600;
+      padding: 11px 16px;
+      border-radius: 10px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
@@ -671,7 +673,7 @@
     }
 
     .apple-copy-btn:hover {
-      background: var(--border-strong);
+      background: #218838;
     }
 
     .apple-slip-preview-btn {
@@ -1366,6 +1368,13 @@
       </div>
       <div class="slip-footer">
         <button type="button" class="apple-btn apple-btn-secondary" id="closeSlipFooterBtn">ปิด</button>
+        <button type="button" class="apple-btn" id="copySlipTextBtn" style="background: #f5f5f7; color: var(--ink); border: 1px solid var(--border);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          <span>คัดลอกข้อความสลีป</span>
+        </button>
         <button type="button" class="apple-btn" id="saveSlipImageBtn" style="background: #28a745; color: white; border: none;">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -1496,18 +1505,11 @@
         return computedTiers[2];
       }
 
+      // Fix Budgets correctly
       function pickBuyTierForThbBudget(thbBudget, computedTiers) {
         const usdAtTier0 = thbBudget / computedTiers[0].buyRate;
         if (usdAtTier0 <= 30) return computedTiers[0];
         const usdAtTier1 = thbBudget / computedTiers[1].buyRate;
-        if (usdAtTier1 <= 100) return computedTiers[1];
-        return computedTiers[2];
-      }
-
-      function pickSellTierForTargetThb(targetThb, computedTiers) {
-        const usdAtTier0 = targetThb / computedTiers[0].sellRate;
-        if (usdAtTier0 <= 30) return computedTiers[0];
-        const usdAtTier1 = targetThb / computedTiers[1].sellRate;
         if (usdAtTier1 <= 100) return computedTiers[1];
         return computedTiers[2];
       }
@@ -1664,6 +1666,75 @@
 
       function closeSlipModal() {
         document.getElementById("slipModalBackdrop").classList.remove("open");
+      }
+
+      // Format Text Receipt Slip
+      function generateReceiptSlipText(calcData) {
+        const dt = getThaiDateTime();
+        const isBuy = calcData.type === "ซื้อUSD";
+
+        let text = `=====================================\n`;
+        text += `          FUJI COIN STORE\n`;
+        text += `       ใบสรุปรายการแลกเปลี่ยนเงิน\n`;
+        text += `=====================================\n`;
+        text += `ประเภทรายการ  : ${calcData.type}\n`;
+        text += `วันที่         : ${dt.dateStrThai} (${dt.dateShort})\n`;
+        text += `เวลา         : ${dt.timeStr}\n`;
+        text += `-------------------------------------\n`;
+        text += `เรทอ้างอิง    : ${fmtExact(calcData.baseRate, 4)} THB/USD\n`;
+        text += `ช่วงยอด       : ${calcData.tierLabel}\n`;
+        text += `ค่าธรรมเนียม   : ${calcData.feeUsd.toFixed(2)} (${fmtExact(calcData.feeThb, 4)} THB/USD)\n`;
+        text += `เรทสุทธิ      : ${fmtExact(calcData.rate, 4)} THB/USD\n`;
+        text += `-------------------------------------\n`;
+        if (isBuy) {
+          text += `ยอดเงินบาทที่จ่าย : ${fmtMoney(calcData.payThb)} THB\n`;
+          text += `ยอดดอลลาร์สุทธิ : ${fmtMoney(calcData.getUsd)} USD\n`;
+        } else {
+          text += `ยอดดอลลาร์ที่ส่ง : ${fmtMoney(calcData.payUsd)} USD\n`;
+          text += `ยอดเงินบาทสุทธิ : ${fmtMoney(calcData.getThb)} THB\n`;
+        }
+        text += `-------------------------------------\n`;
+        text += `สถานะ        : คำนวณสำเร็จ (Binance Real-time)\n`;
+        text += `=====================================\n`;
+        text += `   ขอบคุณที่ใช้บริการ Fuji Coin Store\n`;
+        text += `=====================================`;
+        return text;
+      }
+
+      function copyTextToClipboard(text, successMsg = "คัดลอกสลีปเรียบร้อยแล้ว!") {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => {
+            showToast(successMsg);
+          }).catch(() => {
+            fallbackCopy(text);
+          });
+        } else {
+          fallbackCopy(text);
+        }
+      }
+
+      function fallbackCopy(text) {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          document.execCommand("copy");
+          showToast("คัดลอกสลีปเรียบร้อยแล้ว!");
+        } catch (e) {
+          showToast("โปรดคัดลอกจากหน้าต่างสลีป");
+        }
+        document.body.removeChild(ta);
+      }
+
+      // Open Image Fallback popup modal showing generated PNG in standard <img> tag
+      function openImageFallbackModal(imgSrc) {
+        const fallbackImg = document.getElementById("fallbackImageElement");
+        fallbackImg.src = imgSrc;
+        document.getElementById("imageFallbackModal").classList.add("open");
       }
 
       // Save Slip as Image function (Off-screen Clone rendering bypasses sandbox invisibility block)
@@ -1904,6 +1975,13 @@
       document.getElementById("closeSlipFooterBtn").addEventListener("click", closeSlipModal);
       document.getElementById("slipModalBackdrop").addEventListener("click", function (e) {
         if (e.target === this) closeSlipModal();
+      });
+
+      document.getElementById("copySlipTextBtn").addEventListener("click", function () {
+        if (currentSlipData) {
+          const slipText = generateReceiptSlipText(currentSlipData);
+          copyTextToClipboard(slipText, `คัดลอกข้อมูลสรุปสลีปแล้ว!`);
+        }
       });
 
       document.getElementById("saveSlipImageBtn").addEventListener("click", function () {
