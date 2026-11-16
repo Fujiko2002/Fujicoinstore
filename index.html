@@ -1473,7 +1473,7 @@
         <div class="rate-setting-group">
           <label class="setting-label" for="baseRateInput">อัตราแลกเปลี่ยนกลาง (USD/THB):</label>
           <div class="apple-input-wrapper">
-            <input type="number" id="baseRateInput" value="0.00" step="0.01" min="0.00" inputmode="decimal">
+            <input type="number" id="baseRateInput" value="0.0000" step="0.0001" min="0.00" inputmode="decimal">
           </div>
           <button type="button" class="apple-btn apple-btn-primary" id="applyRateBtn">คำนวณ</button>
           <button type="button" class="apple-btn apple-btn-binance" id="syncBinanceBtn">
@@ -1854,9 +1854,9 @@
         usd: [10, 25, 50, 100, 500]
       };
 
-      // Official Binance TH USDT_THB API endpoints & CORS fallbacks
-      const BINANCE_REST_URL = "about:invalid#zPythonSafez";
-      const BINANCE_WS_URL = "wss://nbstream.binance.th/w3w/wsa/stream?streams=usdtthb@miniTicker/usdtthb@ticker";
+      // Binance TH public market-data endpoints (USDT/THB order-book midpoint)
+      const BINANCE_REST_URL = "https://api.binance.th/api/v1/ticker/bookTicker?symbol=USDTTHB";
+      const BINANCE_WS_URL = "wss://nbstream.binance.th/w3w/wsa/stream?streams=usdtthb@bookTicker";
 
       // DOM Cache
       const el = {
@@ -2024,36 +2024,45 @@
       }
 
       // ============================================================
-      // 1. Automatic Binance API Connection for USDT_THB
+      // 1. Automatic Binance TH connection: USDT/THB mid-market rate
+      //    Mid = (best bid + best ask) / 2
       // ============================================================
-      function setBinanceStatusUI(state, rateValue) {
-        const dt = getThaiDateTime();
-        el.binanceLiveDot.classList.remove("connecting", "offline");
+      function extractMidRate(data) {
+        const payload = data && data.data ? data.data : data;
+        if (!payload) return null;
+        const bid = Number(payload.bidPrice ?? payload.b ?? payload.bestBid);
+        const ask = Number(payload.askPrice ?? payload.a ?? payload.bestAsk);
+        if (!Number.isFinite(bid) || !Number.isFinite(ask) || bid <= 0 || ask <= 0 || ask < bid) return null;
+        const mid = (bid + ask) / 2;
+        return Number.isFinite(mid) && mid > 1 && mid < 500 ? mid : null;
+      }
 
+      function setBinanceStatusUI(state, rateValue) {
+        el.binanceLiveDot.classList.remove("connecting", "offline");
         if (state === "live") {
           if (Number.isFinite(rateValue) && rateValue > 0) {
             latestBinanceRate = rateValue;
-            el.binanceLivePriceText.textContent = `${rateValue.toFixed(2)} THB`;
-            el.binanceUpdatedTimeText.textContent = dt.timeStr;
-            el.navBinanceText.textContent = `USDT/THB: ${rateValue.toFixed(2)} THB`;
+            el.binanceLivePriceText.textContent = `${rateValue.toFixed(4)} THB`;
+            el.binanceUpdatedTimeText.textContent = getThaiDateTime().timeStr;
+            el.navBinanceText.textContent = `USDT/THB: ${rateValue.toFixed(4)} THB`;
           }
           el.binanceConnStateText.textContent = isAutoSync
-            ? "เชื่อมต่ออัตโนมัติแล้ว (Auto-Sync)"
+            ? "เชื่อมต่ออัตโนมัติแล้ว (Mid-market)"
             : "เชื่อมต่ออยู่ (โหมดกำหนดเรทกลางเอง)";
           el.syncBinanceBtnText.textContent = isAutoSync
             ? "อัปเดตเรท Binance ล่าสุด"
             : "กลับไปใช้เรท Binance อัตโนมัติ";
         } else if (state === "connecting") {
           el.binanceLiveDot.classList.add("connecting");
-          el.binanceConnStateText.textContent = "กำลังดึงเรท USDT_THB อัตโนมัติ...";
-          if (!latestBinanceRate) {
-            el.navBinanceText.textContent = "กำลังเชื่อมต่อ Binance...";
-          }
+          el.binanceConnStateText.textContent = "กำลังดึงราคา Bid/Ask จาก Binance TH...";
+          if (!latestBinanceRate) el.navBinanceText.textContent = "กำลังเชื่อมต่อ Binance...";
         } else if (state === "offline") {
           el.binanceLiveDot.classList.add("offline");
-          el.binanceConnStateText.textContent = "ไม่สามารถดึงเรทอัตโนมัติได้ชั่วคราว (กรอกเรทเองได้)";
+          el.binanceConnStateText.textContent = "Binance ออฟไลน์ชั่วคราว (ใช้เรทล่าสุดหรือกรอกเองได้)";
           if (!latestBinanceRate) {
-            el.navBinanceText.textContent = baseRate > 0 ? `USD/THB: ${baseRate.toFixed(2)} THB` : "Binance (ออฟไลน์)";
+            el.navBinanceText.textContent = baseRate > 0
+              ? `USD/THB: ${baseRate.toFixed(2)} THB`
+              : "Binance (ออฟไลน์)";
           }
         }
       }
@@ -2061,24 +2070,24 @@
       function applyIncomingBinancePrice(priceNum) {
         if (!Number.isFinite(priceNum) || priceNum <= 1 || priceNum >= 500) return;
         setBinanceStatusUI("live", priceNum);
-
         if (isAutoSync && document.activeElement !== el.baseRateInput) {
-          const formatted = priceNum.toFixed(2);
-          if (el.baseRateInput.value !== formatted || Math.abs(baseRate - priceNum) >= 0.001) {
+          const formatted = priceNum.toFixed(4);
+          if (el.baseRateInput.value !== formatted || Math.abs(baseRate - priceNum) >= 0.0001) {
             el.baseRateInput.value = formatted;
             refreshAll();
           }
         }
       }
 
-      async function fetchWithTimeout(url, timeoutMs = 4800) {
+      async function fetchWithTimeout(url, timeoutMs = 5000) {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), timeoutMs);
         try {
           const res = await fetch(url, {
             method: "GET",
             cache: "no-store",
-            signal: controller.signal
+            signal: controller.signal,
+            headers: { "Accept": "application/json" }
           });
           if (!res.ok) throw new Error(`HTTP_${res.status}`);
           return await res.json();
@@ -2088,94 +2097,67 @@
       }
 
       async function fetchBinanceUsdtThbOnce(manualTrigger = false) {
-        const ts = Date.now();
-        const candidateUrls = [
-          BINANCE_REST_URL,
-          `about:invalid#zPythonSafez + "&_t=" + ts)}`,
-          `about:invalid#zPythonSafez`
-        ];
-
-        for (let i = 0; i < candidateUrls.length; i++) {
-          try {
-            const data = await fetchWithTimeout(candidateUrls[i], 5000);
-            const rawPrice = data && (data.price || data.lastPrice || (data.data && data.data.price));
-            const parsed = parseFloat(rawPrice);
-            if (Number.isFinite(parsed) && parsed > 1 && parsed < 500) {
-              applyIncomingBinancePrice(parsed);
-              if (manualTrigger) {
-                el.baseRateInput.value = parsed.toFixed(2);
-                refreshAll();
-                showToast(`ดึงเรท Binance USDT_THB ล่าสุด (${parsed.toFixed(2)} THB) แล้ว`);
-              }
-              return parsed;
-            }
-          } catch (_) {
-            // Try next endpoint in fallback chain
+        try {
+          const data = await fetchWithTimeout(`${BINANCE_REST_URL}&_=${Date.now()}`);
+          const midRate = extractMidRate(data);
+          if (midRate === null) throw new Error("Invalid Binance bookTicker response");
+          applyIncomingBinancePrice(midRate);
+          if (manualTrigger) {
+            isAutoSync = true;
+            el.baseRateInput.value = midRate.toFixed(4);
+            refreshAll();
+            setBinanceStatusUI("live", midRate);
+            showToast(`อัปเดตเรทกลาง Binance แล้ว (${midRate.toFixed(4)} THB)`);
           }
+          return midRate;
+        } catch (_) {
+          if (latestBinanceRate && manualTrigger) {
+            el.baseRateInput.value = latestBinanceRate.toFixed(4);
+            refreshAll();
+            setBinanceStatusUI("live", latestBinanceRate);
+            showToast(`ใช้เรท Binance ล่าสุดที่ได้รับ (${latestBinanceRate.toFixed(4)} THB)`);
+            return latestBinanceRate;
+          }
+          if (!latestBinanceRate) setBinanceStatusUI("offline", null);
+          if (manualTrigger) showToast("ดึงข้อมูล Binance ไม่สำเร็จ กรุณาลองอีกครั้ง");
+          return null;
         }
-
-        // If REST failed and WebSocket hasn't supplied a price yet
-        if (latestBinanceRate && manualTrigger) {
-          el.baseRateInput.value = latestBinanceRate.toFixed(2);
-          refreshAll();
-          setBinanceStatusUI("live", latestBinanceRate);
-          showToast(`ซิงก์เรท Binance USDT_THB (${latestBinanceRate.toFixed(2)} THB) แล้ว`);
-          return latestBinanceRate;
-        }
-
-        if (!latestBinanceRate) {
-          setBinanceStatusUI("offline", null);
-        }
-        if (manualTrigger) {
-          showToast("ไม่สามารถเชื่อมต่อ API Binance ได้ในขณะนี้");
-        }
-        return null;
       }
 
       function connectBinanceWebSocket() {
         if (typeof window.WebSocket !== "function") return;
-        if (binanceWs && (binanceWs.readyState === WebSocket.OPEN || binanceWs.readyState === WebSocket.CONNECTING)) {
-          return;
-        }
-
+        if (binanceWs && (binanceWs.readyState === WebSocket.OPEN || binanceWs.readyState === WebSocket.CONNECTING)) return;
         try {
           binanceWs = new WebSocket(BINANCE_WS_URL);
-
+          binanceWs.addEventListener("open", () => {
+            setBinanceStatusUI(latestBinanceRate ? "live" : "connecting", latestBinanceRate);
+          });
           binanceWs.addEventListener("message", (event) => {
             try {
               const msg = JSON.parse(event.data);
               const payload = msg && msg.data ? msg.data : msg;
-              if (!payload) return;
-              // c = close/latest price in miniTicker & 24hrTicker
-              const priceVal = parseFloat(payload.c || payload.lastPrice || payload.price);
-              if (Number.isFinite(priceVal) && priceVal > 1 && priceVal < 500) {
-                applyIncomingBinancePrice(priceVal);
-              }
+              const midRate = extractMidRate(payload);
+              if (midRate !== null) applyIncomingBinancePrice(midRate);
             } catch (_) {}
           });
-
           binanceWs.addEventListener("close", () => {
             if (wsReconnectTimer) clearTimeout(wsReconnectTimer);
             wsReconnectTimer = setTimeout(connectBinanceWebSocket, 6000);
           });
-
           binanceWs.addEventListener("error", () => {
-            try {
-              binanceWs.close();
-            } catch (_) {}
+            try { binanceWs.close(); } catch (_) {}
           });
-        } catch (_) {}
+        } catch (_) {
+          setBinanceStatusUI("offline", null);
+        }
       }
 
       function initBinanceAutoSync() {
         setBinanceStatusUI("connecting", null);
         connectBinanceWebSocket();
         fetchBinanceUsdtThbOnce(false);
-
         if (restPollTimer) clearInterval(restPollTimer);
-        restPollTimer = setInterval(() => {
-          fetchBinanceUsdtThbOnce(false);
-        }, 15000);
+        restPollTimer = setInterval(() => fetchBinanceUsdtThbOnce(false), 30000);
       }
 
       // ============================================================
@@ -2631,7 +2613,7 @@
       el.syncBinanceBtn.addEventListener("click", () => {
         isAutoSync = true;
         if (latestBinanceRate) {
-          el.baseRateInput.value = latestBinanceRate.toFixed(2);
+          el.baseRateInput.value = latestBinanceRate.toFixed(4);
           refreshAll();
           setBinanceStatusUI("live", latestBinanceRate);
         }
